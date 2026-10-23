@@ -15,18 +15,16 @@ From the repository root, run:
 ```
 
 The distributable mod is created at
-`build\libs\nexora-client-1.0.0.jar`. Install Fabric Loader 0.16.10 (or newer)
+`build\libs\nexora-client-1.0.1.jar`. Install Fabric Loader 0.16.10 (or newer)
 for Minecraft 1.21.1, then place the JAR and Fabric API 0.116.6+1.21.1 in that
 Minecraft installation's `mods` folder.
 
 ## Menu behavior
 
 Singleplayer, Multiplayer, and Settings open Minecraft's original screens.
-The account panel displays the currently authenticated Minecraft session and
-its available skin. Authentication and account selection remain with the
+The menu uses the supplied Nexora logo, animated hover underlines, and a
+character preview with a walking entrance and cursor-following head. The
+account panel displays the currently authenticated Minecraft session and its
+available skin. Authentication and account selection remain with the
 launcher: the mod does not invent accounts, change usernames to impersonate a
 login, or save credentials.
-
-Press F8 to toggle the FPS unlocker. It is off by default and temporarily
-overrides Minecraft's frame-rate limit while enabled; it does not change the
-saved vanilla video setting.

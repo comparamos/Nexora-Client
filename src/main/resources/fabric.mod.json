@@ -7,11 +7,6 @@
   "authors": ["comparamos"],
   "license": "MIT",
   "environment": "client",
-  "entrypoints": {
-    "client": [
-      "com.nexora.client.NexoraClient"
-    ]
-  },
   "mixins": [
     "nexora.mixins.json"
   ],

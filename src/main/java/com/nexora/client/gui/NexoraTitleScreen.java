@@ -1,7 +1,6 @@
 package com.nexora.client.gui;
 
 import net.minecraft.client.MinecraftClient;
-import com.nexora.client.FpsUnlocker;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
@@ -13,7 +12,6 @@ import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.entity.model.EntityModelLayers;
 import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.PlayerSkinProvider;
-import net.minecraft.client.util.DefaultSkinHelper;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.text.Text;
@@ -27,6 +25,8 @@ import java.util.concurrent.CompletableFuture;
 public final class NexoraTitleScreen extends Screen {
     private static final int PURPLE = 0xFF9B38FF;
     private static final int PANEL = 0xD9080B1B;
+    private static final Identifier NEXORA_LOGO = Identifier.of("nexora", "textures/gui/nexora_logo.png");
+    private static final Identifier DEFAULT_SKIN = Identifier.ofVanilla("textures/entity/player/wide/steve.png");
 
     private final long openedAt = System.currentTimeMillis();
     private final float[] hover = new float[3];
@@ -56,7 +56,7 @@ public final class NexoraTitleScreen extends Screen {
             return;
         }
         skinRequested = true;
-        skinTexture = DefaultSkinHelper.getTexture();
+        skinTexture = DEFAULT_SKIN;
         PlayerSkinProvider provider = client.getSkinProvider();
         CompletableFuture<SkinTextures> lookup = provider.fetchSkinTextures(client.getGameProfile());
         lookup.thenAccept(textures -> client.execute(() -> {
@@ -71,9 +71,7 @@ public final class NexoraTitleScreen extends Screen {
         drawMenu(context, mouseX, mouseY, delta);
         drawAccount(context, mouseX, mouseY);
         renderCharacter(context, mouseX, mouseY);
-        context.drawText(textRenderer, "Nexora Client 1.0.0", 22, height - 24, 0xFFBCA9FF, false);
-        String fpsStatus = "FPS UNLOCKER " + (FpsUnlocker.isEnabled() ? "ON" : "OFF") + " [F8]";
-        context.drawText(textRenderer, fpsStatus, 22, height - 42, 0xFFBCA9FF, false);
+        context.drawText(textRenderer, "Nexora Client 1.0.1", 22, height - 24, 0xFFBCA9FF, false);
         context.drawText(textRenderer, "PLAY BETTER. FASTER.", width - textRenderer.getWidth("PLAY BETTER. FASTER.") - 22,
                 height - 24, 0xFFBCA9FF, false);
     }
@@ -95,37 +93,59 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private void drawBrand(DrawContext context) {
-        int center = width / 2;
-        int logoY = height / 5;
-        MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        matrices.translate(center, logoY + 9, 0);
-        matrices.scale(2.8f, 2.8f, 1);
-        context.drawCenteredTextWithShadow(textRenderer, Text.literal("N"), 0, -4, 0xFF7438FF);
-        matrices.pop();
-        context.drawCenteredTextWithShadow(textRenderer, Text.literal("Nexora"), center, logoY + 35,
+        int center = menuCenterX();
+        int logoSize = Math.min(76, Math.max(52, height / 9));
+        int logoY = Math.max(28, height / 8);
+        context.drawTexture(NEXORA_LOGO, center - logoSize / 2, logoY, logoSize, logoSize,
+                0, 0, 1254, 1254, 1254, 1254);
+        context.drawCenteredTextWithShadow(textRenderer, Text.literal("Nexora"), center, logoY + logoSize + 10,
                 0xFFF4F1FF);
-        context.drawCenteredTextWithShadow(textRenderer, Text.literal("C L I E N T"), center, logoY + 63,
+        context.drawCenteredTextWithShadow(textRenderer, Text.literal("C L I E N T"), center, logoY + logoSize + 34,
                 PURPLE);
     }
 
     private void drawMenu(DrawContext context, int mouseX, int mouseY, float delta) {
         String[] labels = {"Singleplayer", "Multiplayer", "Settings"};
-        int buttonWidth = Math.min(360, Math.max(260, width / 3));
-        int buttonHeight = 44;
-        int x = width / 2 - buttonWidth / 2;
-        int firstY = height / 2 - 20;
+        int buttonWidth = Math.min(390, Math.max(240, width * 31 / 100));
+        int buttonHeight = buttonHeight();
+        int x = menuCenterX() - buttonWidth / 2;
+        int firstY = firstButtonY();
+        int gap = buttonGap();
         for (int i = 0; i < labels.length; i++) {
-            int y = firstY + i * (buttonHeight + 13);
+            int y = firstY + i * (buttonHeight + gap);
             boolean isHovered = inside(mouseX, mouseY, x, y, buttonWidth, buttonHeight);
             hover[i] = MathHelper.clamp(hover[i] + (isHovered ? 1 : -1) * delta * 0.12f, 0, 1);
-            int glow = (int) (40 + hover[i] * 90);
-            int border = i == 0 || hover[i] > 0.01f ? 0xFFB22CFF : 0xFF4422A8;
-            context.fill(x - 1, y - 1, x + buttonWidth + 1, y + buttonHeight + 1, (glow << 24) | 0x007335FF);
+            int border = hover[i] > 0.01f ? 0xFFB22CFF : 0xFF4422A8;
             roundedPanel(context, x, y, buttonWidth, buttonHeight, PANEL, border);
-            context.drawCenteredTextWithShadow(textRenderer, labels[i], width / 2, y + 17,
-                    0xFFF2EEFF);
+            context.drawCenteredTextWithShadow(textRenderer, labels[i], menuCenterX(), y + 20, 0xFFF2EEFF);
+            int lineWidth = Math.round((buttonWidth - 48) * hover[i]);
+            if (lineWidth > 0) {
+                int lineX = menuCenterX() - lineWidth / 2;
+                int lineY = y + buttonHeight - 4;
+                context.fill(lineX - 4, lineY - 2, lineX + lineWidth + 4, lineY + 2, 0x667B69FF);
+                context.fill(lineX, lineY - 1, lineX + lineWidth, lineY + 1, 0xFFFFFFFF);
+            }
         }
+    }
+
+    private int menuCenterX() {
+        return width * 40 / 100;
+    }
+
+    private int buttonHeight() {
+        return Math.min(60, Math.max(44, height / 12));
+    }
+
+    private int buttonGap() {
+        return Math.max(12, height / 36);
+    }
+
+    private int firstButtonY() {
+        int logoSize = Math.min(76, Math.max(52, height / 9));
+        int preferred = Math.max(height * 47 / 100, height / 8 + logoSize + 108);
+        int contentHeight = buttonHeight() * 3 + buttonGap() * 2;
+        int latest = Math.max(height * 38 / 100, height - 48 - contentHeight);
+        return Math.min(preferred, latest);
     }
 
     private void drawAccount(DrawContext context, int mouseX, int mouseY) {
@@ -148,7 +168,7 @@ public final class NexoraTitleScreen extends Screen {
 
     private void drawAvatar(DrawContext context, int x, int y, int size) {
         Identifier texture = skinTexture != null ? skinTexture
-                : DefaultSkinHelper.getTexture();
+                : DEFAULT_SKIN;
         context.drawTexture(texture, x, y, size, size, 8, 8, 8, 8, 64, 64);
         context.drawTexture(texture, x, y, size, size, 40, 8, 8, 8, 64, 64);
     }
@@ -161,14 +181,16 @@ public final class NexoraTitleScreen extends Screen {
             playerModel = new PlayerEntityModel<>(client.getEntityModelLoader().getModelPart(EntityModelLayers.PLAYER), false);
         }
         if (skinTexture == null) {
-            skinTexture = DefaultSkinHelper.getTexture();
+            skinTexture = DEFAULT_SKIN;
         }
         float entrance = MathHelper.clamp((System.currentTimeMillis() - openedAt) / 900.0f, 0, 1);
         float eased = 1 - (float) Math.pow(1 - entrance, 3);
-        int x = width * 3 / 4 + (int) ((1 - eased) * width / 3);
-        int y = height * 3 / 4 + 24;
+        int targetX = width * 79 / 100;
+        int x = targetX + (int) ((1 - eased) * width / 4);
+        int y = height * 87 / 100;
         float targetYaw = dragging ? headYaw : MathHelper.clamp((mouseX - x) * 0.12f, -32, 32);
-        float targetPitch = MathHelper.clamp((mouseY - (y - 120)) * 0.08f, -18, 18);
+        int headScreenY = y - 210;
+        float targetPitch = MathHelper.clamp((mouseY - headScreenY) * 0.08f, -18, 18);
         headYaw += (targetYaw - headYaw) * 0.18f;
         headPitch += (targetPitch - headPitch) * 0.18f;
         long elapsed = System.currentTimeMillis() - openedAt;
@@ -177,7 +199,7 @@ public final class NexoraTitleScreen extends Screen {
         MatrixStack matrices = context.getMatrices();
         matrices.push();
         matrices.translate(x, y + idle, 100);
-        matrices.scale(-5.5f, 5.5f, 5.5f);
+        matrices.scale(-10.5f, 10.5f, 10.5f);
         matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotation));
         matrices.translate(0, -24, 0);
         playerModel.head.yaw = headYaw * 0.017453292f;
@@ -208,12 +230,14 @@ public final class NexoraTitleScreen extends Screen {
         if (button != 0) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
-        int buttonWidth = Math.min(360, Math.max(260, width / 3));
-        int x = width / 2 - buttonWidth / 2;
-        int firstY = height / 2 - 20;
+        int buttonWidth = Math.min(390, Math.max(240, width * 31 / 100));
+        int buttonHeight = buttonHeight();
+        int x = menuCenterX() - buttonWidth / 2;
+        int firstY = firstButtonY();
+        int gap = buttonGap();
         for (int i = 0; i < 3; i++) {
-            int y = firstY + i * 57;
-            if (inside(mouseX, mouseY, x, y, buttonWidth, 44)) {
+            int y = firstY + i * (buttonHeight + gap);
+            if (inside(mouseX, mouseY, x, y, buttonWidth, buttonHeight)) {
                 if (client != null) {
                     switch (i) {
                         case 0 -> client.setScreen(new SelectWorldScreen(this));
@@ -234,7 +258,7 @@ public final class NexoraTitleScreen extends Screen {
             accountDropdown = false;
             return true;
         }
-        if (mouseX > width * 0.62 && mouseY > height * 0.35) {
+        if (mouseX > width * 0.68 && mouseY > height * 0.3 && mouseY < height * 0.95) {
             dragging = true;
             dragStartX = mouseX;
             dragStartRotation = rotation;
