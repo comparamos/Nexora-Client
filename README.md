@@ -15,7 +15,7 @@ From the repository root, run:
 ```
 
 The distributable mod is created at
-`build\libs\nexora-client-1.3.4.jar`. Install Fabric Loader 0.16.10 (or newer)
+`build\libs\nexora-client-1.3.5.jar`. Install Fabric Loader 0.16.10 (or newer)
 for Minecraft 1.21.1, then place the JAR and Fabric API 0.116.6+1.21.1 in that
 Minecraft installation's `mods` folder.
 
@@ -24,9 +24,10 @@ Minecraft installation's `mods` folder.
 The startup screen shows a high-resolution Nexora logo and a spaced "Press to
 Enter" prompt. Enter or click to open the main menu; after leaving a world,
 Minecraft returns directly to the main menu. The logo follows an upward curved
-animation as the menu appears. A small bottom-left label shows the Nexora Client
-version and Minecraft version in the small format
-`Nexora Client 1.3.4 [1.21.1]`.
+animation as the menu appears, with staggered, eased button reveals. Returning
+from a world opens the fully visible menu immediately, with no entrance or
+ambient particle animation. A small bottom-left label shows the Nexora Client
+version and Minecraft version in the format `Nexora Client 1.3.5 [1.21.1]`.
 Singleplayer,
 Multiplayer, and Settings open Minecraft's original screens; Client Settings
 opens Nexora's settings page, and Quit Game closes the client. The main menu

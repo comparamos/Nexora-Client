@@ -23,7 +23,7 @@ public abstract class TitleScreenMixin {
                 nexora$introPresented = true;
                 client.setScreen(new NexoraIntroScreen());
             } else {
-                client.setScreen(new NexoraTitleScreen());
+                client.setScreen(new NexoraTitleScreen(false));
             }
         }
     }

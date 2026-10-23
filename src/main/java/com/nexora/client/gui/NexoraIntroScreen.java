@@ -75,7 +75,7 @@ public final class NexoraIntroScreen extends Screen {
 
     private void enterMenu() {
         if (client != null) {
-            client.setScreen(new NexoraTitleScreen());
+            client.setScreen(new NexoraTitleScreen(true));
         }
     }
 

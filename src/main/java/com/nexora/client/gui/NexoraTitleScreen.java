@@ -27,9 +27,15 @@ public final class NexoraTitleScreen extends Screen {
 
     private final long openedAt = System.currentTimeMillis();
     private final float[] hover = new float[MENU_ITEM_COUNT];
+    private final boolean animateEntrance;
 
     public NexoraTitleScreen() {
+        this(true);
+    }
+
+    public NexoraTitleScreen(boolean animateEntrance) {
         super(Text.literal("Nexora Client"));
+        this.animateEntrance = animateEntrance;
     }
 
     @Override
@@ -52,7 +58,7 @@ public final class NexoraTitleScreen extends Screen {
 
     private void drawBackground(DrawContext context) {
         context.fillGradient(0, 0, width, height, 0xFF03040B, 0xFF08051C);
-        long time = System.currentTimeMillis() - openedAt;
+        long time = animateEntrance ? System.currentTimeMillis() - openedAt : 0;
         for (int i = 0; i < 24; i++) {
             float phase = (time * (0.012f + (i % 5) * 0.002f) + i * 67.0f) % (height + 24);
             int x = Math.floorMod(i * 193 + (int) (Math.sin(time * 0.00035 + i) * 48), Math.max(1, width));
@@ -64,13 +70,13 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private void drawBrand(DrawContext context) {
-        float progress = MathHelper.clamp((System.currentTimeMillis() - openedAt) / 1100.0f, 0, 1);
-        float eased = 1 - (float) Math.pow(1 - progress, 3);
+        float progress = entranceProgress(850);
+        float eased = smoothEase(progress);
         int center = menuCenterX() + Math.round((float) Math.sin(Math.PI * progress)
-                * Math.min(width * 0.14f, 150));
+                * Math.min(width * 0.045f, 48));
         int logoSize = logoSize();
         int logoWidth = logoSize * 631 / 568;
-        int logoY = Math.round(MathHelper.lerp(eased, height * 0.32f, logoY()));
+        int logoY = Math.round(MathHelper.lerp(eased, height * 0.29f, logoY()));
         context.drawTexture(NEXORA_LOGO, center - logoWidth / 2, logoY, logoWidth, logoSize,
                 0, 0, 1262, 1136, 1262, 1136);
         context.drawCenteredTextWithShadow(textRenderer, menuText("Nexora"), center, logoY + logoSize + 8,
@@ -80,9 +86,6 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private void drawMenu(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (System.currentTimeMillis() - openedAt < 750) {
-            return;
-        }
         int buttonWidth = buttonWidth();
         int buttonHeight = buttonHeight();
         int x = menuCenterX() - buttonWidth / 2;
@@ -93,10 +96,13 @@ public final class NexoraTitleScreen extends Screen {
             boolean isHovered = inside(mouseX, mouseY, x, y, buttonWidth, buttonHeight);
             hover[i] = MathHelper.clamp(hover[i] + (isHovered ? 1 : -1) * delta * 0.12f, 0, 1);
             Text label = menuText(MENU_LABELS[i]);
-            int textColor = mixColor(hover[i], 0xFFF2EEFF, 0xFFFFFFFF);
+            float reveal = entranceProgress(300 + i * 70, 420);
+            float easedReveal = smoothEase(reveal);
+            int textColor = mixColor(easedReveal, 0x00F2EEFF,
+                    mixColor(hover[i], 0xFFF2EEFF, 0xFFFFFFFF));
             context.drawCenteredTextWithShadow(textRenderer, label, menuCenterX(),
-                    y + (buttonHeight - 8) / 2 - 3, textColor);
-            int underlineWidth = Math.round((textRenderer.getWidth(label) + 16) * hover[i]);
+                    y + (buttonHeight - 8) / 2 - 3 + Math.round((1 - easedReveal) * 5), textColor);
+            int underlineWidth = Math.round((textRenderer.getWidth(label) + 16) * hover[i] * easedReveal);
             if (underlineWidth > 0) {
                 int underlineX = menuCenterX() - underlineWidth / 2;
                 int underlineY = y + buttonHeight - 2;
@@ -141,6 +147,21 @@ public final class NexoraTitleScreen extends Screen {
         return Math.min(preferred, latest);
     }
 
+    private float entranceProgress(int duration) {
+        return entranceProgress(0, duration);
+    }
+
+    private float entranceProgress(int delay, int duration) {
+        if (!animateEntrance) {
+            return 1;
+        }
+        return MathHelper.clamp((System.currentTimeMillis() - openedAt - delay) / (float) duration, 0, 1);
+    }
+
+    private static float smoothEase(float value) {
+        return value * value * (3 - 2 * value);
+    }
+
     private static Text menuText(String value) {
         return Text.literal(value).setStyle(Style.EMPTY.withFont(MENU_FONT));
     }
@@ -161,6 +182,9 @@ public final class NexoraTitleScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         if (button != 0) {
             return super.mouseClicked(mouseX, mouseY, button);
+        }
+        if (animateEntrance && entranceProgress(850) < 1) {
+            return true;
         }
         int buttonWidth = buttonWidth();
         int buttonHeight = buttonHeight();
