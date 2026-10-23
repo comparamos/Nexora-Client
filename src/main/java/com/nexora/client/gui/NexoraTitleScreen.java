@@ -7,18 +7,30 @@ import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
+import net.minecraft.client.model.ModelPart;
+import net.minecraft.client.render.DiffuseLighting;
+import net.minecraft.client.render.LightmapTextureManager;
+import net.minecraft.client.render.OverlayTexture;
+import net.minecraft.client.render.RenderLayer;
+import net.minecraft.client.render.VertexConsumer;
+import net.minecraft.client.render.entity.model.EntityModelLayers;
+import net.minecraft.client.render.entity.model.PlayerEntityModel;
 import net.minecraft.client.texture.PlayerSkinProvider;
 import net.minecraft.client.util.SkinTextures;
 import net.minecraft.client.util.math.MatrixStack;
+import net.minecraft.entity.LivingEntity;
+import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.RotationAxis;
 
 import java.util.concurrent.CompletableFuture;
 
 public final class NexoraTitleScreen extends Screen {
     private static final int PURPLE = 0xFF9B38FF;
     private static final Identifier NEXORA_LOGO = Identifier.of("nexora", "textures/gui/nexora_logo.png");
+    private static final Identifier MENU_FONT = Identifier.of("nexora", "menu");
     private static final Identifier DEFAULT_SKIN = Identifier.ofVanilla("textures/entity/player/wide/steve.png");
     private static final int MENU_ITEM_COUNT = 4;
     private static final String[] MENU_LABELS = {"Singleplayer", "Multiplayer", "Settings", "Quit Game"};
@@ -29,6 +41,7 @@ public final class NexoraTitleScreen extends Screen {
     private final long openedAt = System.currentTimeMillis();
     private final float[] hover = new float[MENU_ITEM_COUNT];
     private Identifier skinTexture;
+    private PlayerEntityModel<LivingEntity> characterModel;
     private boolean skinRequested;
     private boolean slimSkin;
     private boolean accountDropdown;
@@ -44,6 +57,7 @@ public final class NexoraTitleScreen extends Screen {
     @Override
     protected void init() {
         super.init();
+        updateCharacterModel();
         requestSkin();
     }
 
@@ -61,6 +75,17 @@ public final class NexoraTitleScreen extends Screen {
     private void updateSkin(SkinTextures textures) {
         skinTexture = textures.texture();
         slimSkin = textures.model() == SkinTextures.Model.SLIM;
+        updateCharacterModel();
+    }
+
+    private void updateCharacterModel() {
+        if (client == null) {
+            return;
+        }
+        ModelPart modelPart = client.getEntityModelLoader().getModelPart(
+                slimSkin ? EntityModelLayers.PLAYER_SLIM : EntityModelLayers.PLAYER);
+        characterModel = new PlayerEntityModel<>(modelPart, slimSkin);
+        characterModel.setVisible(true);
     }
 
     @Override
@@ -91,13 +116,13 @@ public final class NexoraTitleScreen extends Screen {
     private void drawBrand(DrawContext context) {
         int center = menuCenterX();
         int logoSize = logoSize();
-        int logoWidth = logoSize * 609 / 546;
+        int logoWidth = logoSize * 631 / 568;
         int logoY = logoY();
         context.drawTexture(NEXORA_LOGO, center - logoWidth / 2, logoY, logoWidth, logoSize,
                 0, 0, 631, 568, 631, 568);
-        context.drawCenteredTextWithShadow(textRenderer, Text.literal("Nexora"), center, logoY + logoSize + 8,
+        context.drawCenteredTextWithShadow(textRenderer, menuText("Nexora"), center, logoY + logoSize + 8,
                 0xFFF4F1FF);
-        context.drawCenteredTextWithShadow(textRenderer, Text.literal("C L I E N T"), center, logoY + logoSize + 27,
+        context.drawCenteredTextWithShadow(textRenderer, menuText("C L I E N T"), center, logoY + logoSize + 27,
                 PURPLE);
     }
 
@@ -111,10 +136,10 @@ public final class NexoraTitleScreen extends Screen {
             int y = firstY + i * (buttonHeight + gap);
             boolean isHovered = inside(mouseX, mouseY, x, y, buttonWidth, buttonHeight);
             hover[i] = MathHelper.clamp(hover[i] + (isHovered ? 1 : -1) * delta * 0.12f, 0, 1);
-            String label = MENU_LABELS[i];
+            Text label = menuText(MENU_LABELS[i]);
             int textColor = hover[i] > 0.01f ? 0xFFFFFFFF : 0xFFF2EEFF;
             context.drawCenteredTextWithShadow(textRenderer, label, menuCenterX(),
-                    y + (buttonHeight - 8) / 2, textColor);
+                    y + (buttonHeight - 8) / 2 - 3, textColor);
             int lineWidth = Math.round((textRenderer.getWidth(label) + 32) * hover[i]);
             if (lineWidth > 0) {
                 int lineX = menuCenterX() - lineWidth / 2;
@@ -126,19 +151,19 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int menuCenterX() {
-        return width * 40 / 100;
+        return width / 2;
     }
 
     private int buttonHeight() {
-        return Math.min(60, Math.max(20, height / 14));
+        return Math.min(48, Math.max(19, height / 16));
     }
 
     private int buttonWidth() {
-        return Math.min(440, Math.max(240, width * 40 / 100));
+        return Math.min(420, Math.max(120, width * 34 / 100));
     }
 
     private int buttonGap() {
-        return Math.max(6, height / 36);
+        return Math.max(4, height / 48);
     }
 
     private int logoSize() {
@@ -191,63 +216,58 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private void renderCharacter(DrawContext context, int mouseX, int mouseY) {
-        if (client == null || skinTexture == null) {
+        if (client == null || skinTexture == null || characterModel == null) {
             return;
         }
         float entrance = MathHelper.clamp((System.currentTimeMillis() - openedAt) / 900.0f, 0, 1);
         float eased = 1 - (float) Math.pow(1 - entrance, 3);
         long elapsed = System.currentTimeMillis() - openedAt;
-        float idle = (float) Math.sin(elapsed * 0.002) * Math.max(1, height * 0.005f);
-        float walk = (float) Math.sin(elapsed * 0.012) * (1 - entrance) * height * 0.025f;
-        int targetCenterX = width * 79 / 100;
-        int figureWidth = Math.max(32, height * 24 / 100);
-        int centerX = targetCenterX + (int) ((1 - eased) * width / 4);
-        int headSize = Math.max(24, height / 8);
-        int armWidth = Math.max(8, figureWidth / 5);
-        int bodyWidth = figureWidth * 2 / 5;
-        int torsoHeight = height / 6;
-        int limbHeight = height / 6;
-        int top = height * 35 / 100 + (int) idle;
-        int headX = centerX - headSize / 2;
-        int headY = top;
-        int torsoX = centerX - bodyWidth / 2;
-        int torsoY = headY + headSize + 2;
-        int legsY = torsoY + torsoHeight;
-        float lookX = dragging ? 0 : MathHelper.clamp((mouseX - centerX) * 0.012f, -headSize * 0.16f, headSize * 0.16f);
-        float lookY = dragging ? 0 : MathHelper.clamp((mouseY - (headY + headSize / 2)) * 0.008f,
-                -headSize * 0.1f, headSize * 0.1f);
+        float idle = (float) Math.sin(elapsed * 0.002) * 0.025f;
+        float walk = (float) Math.sin(elapsed * 0.012) * 0.75f * (1 - entrance);
+        float scale = Math.min(height * 0.68f / 2, width * 0.20f);
+        float centerX = width * 0.79f + (1 - eased) * width * 0.25f;
+        float top = height * 0.18f + (float) Math.sin(elapsed * 0.002) * 2.0f;
+        float headCenterY = top + scale * 0.25f;
+        float lookYaw = dragging ? 0 : MathHelper.clamp((mouseX - centerX) / Math.max(1, width) * 1.8f, -0.55f, 0.55f);
+        float lookPitch = dragging ? 0 : MathHelper.clamp((mouseY - headCenterY) / Math.max(1, height) * 1.5f, -0.4f, 0.4f);
+        characterModel.head.yaw = lookYaw;
+        characterModel.head.pitch = lookPitch;
+        characterModel.hat.copyTransform(characterModel.head);
+        characterModel.body.yaw = idle;
+        characterModel.rightArm.pitch = walk + 0.08f;
+        characterModel.leftArm.pitch = -walk + 0.08f;
+        characterModel.rightLeg.pitch = -walk;
+        characterModel.leftLeg.pitch = walk;
+        characterModel.jacket.copyTransform(characterModel.body);
+        characterModel.rightSleeve.copyTransform(characterModel.rightArm);
+        characterModel.leftSleeve.copyTransform(characterModel.leftArm);
+        characterModel.rightPants.copyTransform(characterModel.rightLeg);
+        characterModel.leftPants.copyTransform(characterModel.leftLeg);
+
         MatrixStack matrices = context.getMatrices();
-        matrices.push();
-        boolean facingAway = Math.abs(MathHelper.wrapDegrees(rotation)) > 90;
-        if (facingAway) {
-            matrices.translate(centerX * 2, 0, 0);
-            matrices.scale(-1, 1, 1);
+        DiffuseLighting.enableGuiDepthLighting();
+        try {
+            context.draw(() -> {
+                matrices.push();
+                try {
+                    matrices.translate(centerX, top + scale * 0.5f, 150);
+                    matrices.scale(scale, scale, scale);
+                    matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotation + 180));
+                    VertexConsumer vertexConsumer = context.getVertexConsumers()
+                            .getBuffer(RenderLayer.getEntityCutoutNoCull(skinTexture));
+                    characterModel.render(matrices, vertexConsumer, LightmapTextureManager.MAX_LIGHT_COORDINATE,
+                            OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
+                } finally {
+                    matrices.pop();
+                }
+            });
+        } finally {
+            DiffuseLighting.disableGuiDepthLighting();
         }
-        int rightArmX = torsoX - armWidth;
-        int leftArmX = torsoX + bodyWidth;
-        int rightLegX = centerX - figureWidth / 2 + (int) walk;
-        int leftLegX = centerX + 1 + (int) -walk;
-        drawSkinPart(context, rightLegX, legsY, figureWidth / 2, limbHeight, 4, 20, 4, 12);
-        drawSkinPart(context, leftLegX, legsY, figureWidth / 2, limbHeight, 20, 52, 4, 12);
-        drawSkinPart(context, torsoX, torsoY, bodyWidth, torsoHeight, 20, 20, 8, 12);
-        drawSkinPart(context, torsoX, torsoY, bodyWidth, torsoHeight, 20, 36, 8, 12);
-        int armY = torsoY + Math.round(walk);
-        int leftArmTextureX = slimSkin ? 36 : 40;
-        drawSkinPart(context, rightArmX, armY, armWidth, limbHeight, 44, 20, 4, 12);
-        drawSkinPart(context, rightArmX, armY, armWidth, limbHeight, 44, 36, 4, 12);
-        drawSkinPart(context, leftArmX, torsoY - Math.round(walk), armWidth, limbHeight, leftArmTextureX, 52, 4, 12);
-        drawSkinPart(context, leftArmX, torsoY - Math.round(walk), armWidth, limbHeight, 52, 52, 4, 12);
-        int headDrawX = headX + Math.round(lookX);
-        int headDrawY = headY + Math.round(lookY);
-        drawSkinPart(context, headDrawX, headDrawY, headSize, headSize, 8, 8, 8, 8);
-        drawSkinPart(context, headDrawX, headDrawY, headSize, headSize, 40, 8, 8, 8);
-        matrices.pop();
     }
 
-    private void drawSkinPart(DrawContext context, int x, int y, int width, int height,
-                              int textureX, int textureY, int textureWidth, int textureHeight) {
-        context.drawTexture(skinTexture, x, y, width, height, textureX, textureY,
-                textureWidth, textureHeight, 64, 64);
+    private static Text menuText(String value) {
+        return Text.literal(value).setStyle(Style.EMPTY.withFont(MENU_FONT));
     }
 
     private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) {

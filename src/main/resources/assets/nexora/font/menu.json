@@ -1,0 +1,11 @@
+{
+  "providers": [
+    {
+      "type": "ttf",
+      "file": "nexora:barlow_condensed_semibold.ttf",
+      "shift": [0, 0],
+      "size": 12,
+      "oversample": 2
+    }
+  ]
+}
