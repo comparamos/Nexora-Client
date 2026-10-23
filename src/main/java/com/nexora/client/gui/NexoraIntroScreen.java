@@ -26,7 +26,7 @@ public final class NexoraIntroScreen extends Screen {
     protected void init() {
         super.init();
         if (client != null) {
-            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, false);
+            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, true);
         }
     }
 

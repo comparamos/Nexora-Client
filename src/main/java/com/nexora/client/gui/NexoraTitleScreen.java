@@ -27,7 +27,6 @@ public final class NexoraTitleScreen extends Screen {
 
     private final long openedAt = System.currentTimeMillis();
     private final float[] hover = new float[MENU_ITEM_COUNT];
-    private boolean accountDropdown;
 
     public NexoraTitleScreen() {
         super(Text.literal("Nexora Client"));
@@ -37,7 +36,7 @@ public final class NexoraTitleScreen extends Screen {
     protected void init() {
         super.init();
         if (client != null) {
-            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, false);
+            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, true);
         }
     }
 
@@ -46,12 +45,9 @@ public final class NexoraTitleScreen extends Screen {
         drawBackground(context);
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
-        drawAccount(context, mouseX, mouseY);
         context.drawText(textRenderer,
                 menuText("Nexora Client " + MOD_VERSION + "  |  Minecraft " + GAME_VERSION),
                 4, height - 14, 0xFFBCA9FF, false);
-        context.drawText(textRenderer, "PLAY BETTER. FASTER.", width - textRenderer.getWidth("PLAY BETTER. FASTER.") - 22,
-                height - 24, 0xFFBCA9FF, false);
     }
 
     private void drawBackground(DrawContext context) {
@@ -145,39 +141,6 @@ public final class NexoraTitleScreen extends Screen {
         return Math.min(preferred, latest);
     }
 
-    private int accountWidth() {
-        return Math.min(width * 22 / 100, Math.max(150, width * 18 / 100));
-    }
-
-    private int accountX() {
-        return width - accountWidth() - Math.max(18, width / 20);
-    }
-
-    private int accountY() {
-        return Math.max(18, height / 10);
-    }
-
-    private void drawAccount(DrawContext context, int mouseX, int mouseY) {
-        int x = accountX();
-        int y = accountY();
-        int w = accountWidth();
-        String name = client == null ? "Player" : client.getSession().getUsername();
-        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2 - 6, y + 4, 0xFFF1EDFF);
-        context.drawCenteredTextWithShadow(textRenderer, accountDropdown ? "⌃" : "⌄",
-                x + w / 2 + textRenderer.getWidth(name) / 2 + 6, y + 4, PURPLE);
-        context.fill(x + w / 2 - 14, y + 20, x + w / 2 + 14, y + 21,
-                accountDropdown ? 0xFF9B38FF : 0x60433A5A);
-        if (!accountDropdown) {
-            return;
-        }
-        int dropdownY = y + 25;
-        context.fill(x + 24, dropdownY, x + w - 24, dropdownY + 42, 0xE610111C);
-        context.fill(x + 24, dropdownY, x + w - 24, dropdownY + 1, 0xFF9B38FF);
-        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, dropdownY + 6, 0xFFF1EDFF);
-        context.drawCenteredTextWithShadow(textRenderer, "Add accounts in your launcher",
-                x + w / 2, dropdownY + 23, 0xFFB7AFCB);
-    }
-
     private static Text menuText(String value) {
         return Text.literal(value).setStyle(Style.EMPTY.withFont(MENU_FONT));
     }
@@ -218,21 +181,6 @@ public final class NexoraTitleScreen extends Screen {
                 }
                 return true;
             }
-        }
-        int accountX = accountX();
-        int accountY = accountY();
-        int accountWidth = accountWidth();
-        if (inside(mouseX, mouseY, accountX, accountY, accountWidth, 34)) {
-            accountDropdown = !accountDropdown;
-            return true;
-        }
-        if (accountDropdown && inside(mouseX, mouseY, accountX + 24, accountY + 25,
-                accountWidth - 48, 42)) {
-            accountDropdown = false;
-            return true;
-        }
-        if (accountDropdown) {
-            accountDropdown = false;
         }
         return super.mouseClicked(mouseX, mouseY, button);
     }
