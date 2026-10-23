@@ -95,7 +95,6 @@ public final class NexoraTitleScreen extends Screen {
     @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         drawBackground(context);
-        drawLayout(context);
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
         renderCharacter(context, mouseX, mouseY, delta);
@@ -106,33 +105,10 @@ public final class NexoraTitleScreen extends Screen {
                 height - 24, 0xFFBCA9FF, false);
     }
 
-    private void drawLayout(DrawContext context) {
-        int panelY = Math.max(24, height / 10);
-        int panelHeight = height - panelY * 2 - 18;
-        int leftX = width * 17 / 100;
-        int leftWidth = width * 39 / 100;
-        int rightX = width * 59 / 100;
-        int rightWidth = width * 24 / 100;
-        drawPanel(context, leftX, panelY, leftWidth, panelHeight, 0xD80C0D16, 0x80503A70);
-        drawPanel(context, rightX, panelY, rightWidth, panelHeight, 0xD80C0D16, 0x80503A70);
-        context.fill(leftX + 14, panelY + 1, leftX + leftWidth - 14, panelY + 3, 0xFF9B38FF);
-        context.fill(rightX + 14, panelY + 1, rightX + rightWidth - 14, panelY + 3, 0xFF5650B8);
-        context.drawCenteredTextWithShadow(textRenderer, menuText("MAIN MENU"), menuCenterX(),
-                firstButtonY() - 24, 0xFFBCA9FF);
-        context.drawCenteredTextWithShadow(textRenderer, menuText("PLAYER PREVIEW"), playerCenterX(),
-                panelY + 18, 0xFFBCA9FF);
-    }
-
-    private void drawPanel(DrawContext context, int x, int y, int panelWidth, int panelHeight,
-                           int background, int border) {
-        context.fillGradient(x, y, x + panelWidth, y + panelHeight, 0xE610111C, background);
-        context.drawBorder(x, y, panelWidth, panelHeight, border);
-    }
-
     private void drawBackground(DrawContext context) {
         context.fillGradient(0, 0, width, height, 0xFF03040B, 0xFF08051C);
         long time = System.currentTimeMillis() - openedAt;
-        for (int i = 0; i < 42; i++) {
+        for (int i = 0; i < 24; i++) {
             float phase = (time * (0.012f + (i % 5) * 0.002f) + i * 67.0f) % (height + 24);
             int x = Math.floorMod(i * 193 + (int) (Math.sin(time * 0.00035 + i) * 48), Math.max(1, width));
             int y = height - (int) phase;
@@ -149,12 +125,12 @@ public final class NexoraTitleScreen extends Screen {
                 * Math.min(width * 0.14f, 150));
         int logoSize = logoSize();
         int logoWidth = logoSize * 631 / 568;
-        int logoY = Math.round(MathHelper.lerp(eased, height * 0.34f, logoY()));
+        int logoY = Math.round(MathHelper.lerp(eased, height * 0.32f, logoY()));
         context.drawTexture(NEXORA_LOGO, center - logoWidth / 2, logoY, logoWidth, logoSize,
                 0, 0, 631, 568, 631, 568);
         context.drawCenteredTextWithShadow(textRenderer, menuText("Nexora"), center, logoY + logoSize + 8,
                 0xFFF4F1FF);
-        context.drawCenteredTextWithShadow(textRenderer, menuText("C L I E N T"), center, logoY + logoSize + 27,
+        context.drawCenteredTextWithShadow(textRenderer, menuText("C L I E N T"), center, logoY + logoSize + 25,
                 PURPLE);
     }
 
@@ -172,21 +148,21 @@ public final class NexoraTitleScreen extends Screen {
             boolean isHovered = inside(mouseX, mouseY, x, y, buttonWidth, buttonHeight);
             hover[i] = MathHelper.clamp(hover[i] + (isHovered ? 1 : -1) * delta * 0.12f, 0, 1);
             Text label = menuText(MENU_LABELS[i]);
-            int fill = mixColor(hover[i], 0xB012101C, 0xF01C1627);
-            int edge = mixColor(hover[i], 0x60433A5A, 0xFF9B38FF);
-            context.fill(x, y, x + buttonWidth, y + buttonHeight, fill);
-            context.drawBorder(x, y, buttonWidth, buttonHeight, edge);
-            if (hover[i] > 0.01f) {
-                context.fill(x + 1, y + 5, x + 3, y + buttonHeight - 5, 0xFF9B38FF);
-            }
-            int textColor = hover[i] > 0.01f ? 0xFFFFFFFF : 0xFFF2EEFF;
+            int textColor = mixColor(hover[i], 0xFFF2EEFF, 0xFFFFFFFF);
             context.drawCenteredTextWithShadow(textRenderer, label, menuCenterX(),
                     y + (buttonHeight - 8) / 2 - 3, textColor);
+            int underlineWidth = Math.round((textRenderer.getWidth(label) + 16) * hover[i]);
+            if (underlineWidth > 0) {
+                int underlineX = menuCenterX() - underlineWidth / 2;
+                int underlineY = y + buttonHeight - 2;
+                context.fill(underlineX, underlineY, underlineX + underlineWidth, underlineY + 1,
+                        mixColor(hover[i], 0x009B38FF, 0xFFBCA9FF));
+            }
         }
     }
 
     private int menuCenterX() {
-        return width * 365 / 1000;
+        return width * 39 / 100;
     }
 
     private int playerCenterX() {
@@ -194,7 +170,7 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int buttonHeight() {
-        return Math.min(36, Math.max(27, height / 28));
+        return Math.min(28, Math.max(22, height / 36));
     }
 
     private int buttonWidth() {
@@ -202,7 +178,7 @@ public final class NexoraTitleScreen extends Screen {
         for (String label : MENU_LABELS) {
             widestLabel = Math.max(widestLabel, textRenderer.getWidth(menuText(label)));
         }
-        return Math.min(width * 34 / 100, Math.max(230, widestLabel + 52));
+        return Math.min(width * 30 / 100, widestLabel + 24);
     }
 
     private int buttonGap() {
@@ -218,14 +194,14 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int firstButtonY() {
-        int preferred = Math.max(height * 42 / 100, logoY() + logoSize() + 46);
+        int preferred = Math.max(height * 42 / 100, logoY() + logoSize() + 48);
         int contentHeight = buttonHeight() * MENU_ITEM_COUNT + buttonGap() * (MENU_ITEM_COUNT - 1);
         int latest = Math.max(height * 35 / 100, height - 34 - contentHeight);
         return Math.min(preferred, latest);
     }
 
     private int accountWidth() {
-        return Math.min(width * 22 / 100, Math.max(160, width * 20 / 100));
+        return Math.min(width * 22 / 100, Math.max(150, width * 18 / 100));
     }
 
     private int accountX() {
@@ -233,7 +209,7 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int accountY() {
-        return Math.round(height * 0.74f);
+        return Math.round(height * 0.13f);
     }
 
     private void drawAccount(DrawContext context, int mouseX, int mouseY) {
@@ -241,22 +217,20 @@ public final class NexoraTitleScreen extends Screen {
         int y = accountY();
         int w = accountWidth();
         String name = client == null ? "Player" : client.getSession().getUsername();
-        context.fill(x, y, x + w, y + 34, 0xF0120E1A);
-        context.drawBorder(x, y, w, 34, accountDropdown ? 0xFF9B38FF : 0x80433A5A);
-        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, y + 4, 0xFFF1EDFF);
-        context.drawCenteredTextWithShadow(textRenderer, accountDropdown ? "ACCOUNT MENU  ^" : "ACCOUNT  v",
-                x + w / 2, y + 18, PURPLE);
+        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2 - 6, y + 4, 0xFFF1EDFF);
+        context.drawCenteredTextWithShadow(textRenderer, accountDropdown ? "⌃" : "⌄",
+                x + w / 2 + textRenderer.getWidth(name) / 2 + 6, y + 4, PURPLE);
+        context.fill(x + w / 2 - 14, y + 20, x + w / 2 + 14, y + 21,
+                accountDropdown ? 0xFF9B38FF : 0x60433A5A);
         if (!accountDropdown) {
             return;
         }
-        int dropdownY = y - 62;
-        context.fillGradient(x, dropdownY, x + w, dropdownY + 58, 0xF0181323, 0xF00C0D16);
-        context.drawBorder(x, dropdownY, w, 58, 0xFF9B38FF);
-        context.drawCenteredTextWithShadow(textRenderer, "CURRENT SESSION", x + w / 2,
-                dropdownY + 7, 0xFFBCA9FF);
-        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, dropdownY + 21, 0xFFF1EDFF);
+        int dropdownY = y + 25;
+        context.fill(x + 24, dropdownY, x + w - 24, dropdownY + 42, 0xE610111C);
+        context.fill(x + 24, dropdownY, x + w - 24, dropdownY + 1, 0xFF9B38FF);
+        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, dropdownY + 6, 0xFFF1EDFF);
         context.drawCenteredTextWithShadow(textRenderer, "Add accounts in your launcher",
-                x + w / 2, dropdownY + 39, 0xFFB7AFCB);
+                x + w / 2, dropdownY + 23, 0xFFB7AFCB);
     }
 
     private void renderCharacter(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -268,9 +242,9 @@ public final class NexoraTitleScreen extends Screen {
         long elapsed = System.currentTimeMillis() - openedAt;
         float idle = (float) Math.sin(elapsed * 0.002) * 0.025f;
         float walk = (float) Math.sin(elapsed * 0.012) * 0.75f * (1 - entrance);
-        float scale = Math.min(height * 0.68f / 2, width * 0.20f);
+        float scale = Math.min(height * 0.62f / 2, width * 0.19f);
         float centerX = playerCenterX() + (1 - eased) * width * 0.25f;
-        float top = height * 0.19f + (float) Math.sin(elapsed * 0.002) * 2.0f;
+        float top = height * 0.23f + (float) Math.sin(elapsed * 0.002) * 2.0f;
         float headCenterY = top + scale * 0.25f;
         float focalLength = Math.max(1, height * 0.52f);
         float targetLookYaw = dragging ? 0
@@ -367,7 +341,8 @@ public final class NexoraTitleScreen extends Screen {
             accountDropdown = !accountDropdown;
             return true;
         }
-        if (accountDropdown && inside(mouseX, mouseY, accountX, accountY - 62, accountWidth, 58)) {
+        if (accountDropdown && inside(mouseX, mouseY, accountX + 24, accountY + 25,
+                accountWidth - 48, 42)) {
             accountDropdown = false;
             return true;
         }
