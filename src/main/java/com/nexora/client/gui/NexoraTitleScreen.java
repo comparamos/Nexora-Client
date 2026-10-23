@@ -36,7 +36,7 @@ public final class NexoraTitleScreen extends Screen {
     protected void init() {
         super.init();
         if (client != null) {
-            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, true);
+            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, false);
         }
     }
 
@@ -46,8 +46,8 @@ public final class NexoraTitleScreen extends Screen {
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
         context.drawText(textRenderer,
-                menuText("Nexora Client " + MOD_VERSION + "  |  Minecraft " + GAME_VERSION),
-                4, height - 14, 0xFFBCA9FF, false);
+                menuText("Nexora Client " + MOD_VERSION + " [" + GAME_VERSION + "]"),
+                2, height - 8, 0xFFBCA9FF, false);
     }
 
     private void drawBackground(DrawContext context) {
@@ -72,7 +72,7 @@ public final class NexoraTitleScreen extends Screen {
         int logoWidth = logoSize * 631 / 568;
         int logoY = Math.round(MathHelper.lerp(eased, height * 0.32f, logoY()));
         context.drawTexture(NEXORA_LOGO, center - logoWidth / 2, logoY, logoWidth, logoSize,
-                0, 0, 631, 568, 631, 568);
+                0, 0, 1262, 1136, 1262, 1136);
         context.drawCenteredTextWithShadow(textRenderer, menuText("Nexora"), center, logoY + logoSize + 8,
                 0xFFF4F1FF);
         context.drawCenteredTextWithShadow(textRenderer, menuText("C L I E N T"), center, logoY + logoSize + 25,

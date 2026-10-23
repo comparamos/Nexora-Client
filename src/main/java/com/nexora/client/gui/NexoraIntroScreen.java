@@ -16,6 +16,7 @@ public final class NexoraIntroScreen extends Screen {
     private static final String CLIENT_VERSION = FabricLoader.getInstance().getModContainer("nexora")
             .orElseThrow(() -> new IllegalStateException("Nexora mod metadata is unavailable"))
             .getMetadata().getVersion().getFriendlyString();
+    private static final String GAME_VERSION = SharedConstants.getGameVersion().getName();
     private final long openedAt = System.currentTimeMillis();
 
     public NexoraIntroScreen() {
@@ -26,7 +27,7 @@ public final class NexoraIntroScreen extends Screen {
     protected void init() {
         super.init();
         if (client != null) {
-            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, true);
+            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, false);
         }
     }
 
@@ -38,22 +39,21 @@ public final class NexoraIntroScreen extends Screen {
         long elapsed = System.currentTimeMillis() - openedAt;
         int logoSize = Math.min(170, Math.max(110, height / 5));
         int logoWidth = logoSize * 631 / 568;
-        int groupHeight = logoSize + 54;
+        int groupHeight = logoSize + 48;
         int logoY = height / 2 - groupHeight / 2 + (int) (Math.sin(elapsed * 0.0018) * 4);
         int centerX = width / 2;
         context.drawTexture(NEXORA_LOGO, centerX - logoWidth / 2, logoY, logoWidth, logoSize,
-                0, 0, 631, 568, 631, 568);
+                0, 0, 1262, 1136, 1262, 1136);
         context.drawCenteredTextWithShadow(textRenderer, menuText("Nexora"), centerX, logoY + logoSize + 8,
                 0xFFF4F1FF);
         context.drawCenteredTextWithShadow(textRenderer, menuText("C L I E N T"), centerX, logoY + logoSize + 27,
                 PURPLE);
 
         int promptColor = (elapsed / 650) % 2 == 0 ? 0xFFF4F1FF : 0xFFBCA9FF;
-        context.drawCenteredTextWithShadow(textRenderer, menuText("Press to Enter"), centerX, height * 2 / 3,
+        context.drawCenteredTextWithShadow(textRenderer, menuText("Press to Enter"), centerX, height * 3 / 4,
                 promptColor);
-        String versionText = "Nexora Client " + CLIENT_VERSION + "  |  Minecraft "
-                + SharedConstants.getGameVersion().getName();
-        context.drawText(textRenderer, menuText(versionText), 4, height - 14, 0xFFBCA9FF, false);
+        String versionText = "Nexora Client " + CLIENT_VERSION + " [" + GAME_VERSION + "]";
+        context.drawText(textRenderer, menuText(versionText), 2, height - 8, 0xFFBCA9FF, false);
     }
 
     private void drawParticles(DrawContext context) {
