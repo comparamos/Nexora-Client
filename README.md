@@ -15,14 +15,15 @@ From the repository root, run:
 ```
 
 The distributable mod is created at
-`build\libs\nexora-client-1.0.1.jar`. Install Fabric Loader 0.16.10 (or newer)
+`build\libs\nexora-client-1.0.2.jar`. Install Fabric Loader 0.16.10 (or newer)
 for Minecraft 1.21.1, then place the JAR and Fabric API 0.116.6+1.21.1 in that
 Minecraft installation's `mods` folder.
 
 ## Menu behavior
 
-Singleplayer, Multiplayer, and Settings open Minecraft's original screens.
-The menu uses the supplied Nexora logo, animated hover underlines, and a
+Singleplayer, Multiplayer, and Settings open Minecraft's original screens;
+Quit Game closes the client. The menu uses the cleaned, transparent Nexora
+logo, invisible button hit areas with animated hover underlines, and a
 character preview with a walking entrance and cursor-following head. The
 account panel displays the currently authenticated Minecraft session and its
 available skin. Authentication and account selection remain with the
