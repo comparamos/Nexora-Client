@@ -15,7 +15,7 @@ From the repository root, run:
 ```
 
 The distributable mod is created at
-`build\libs\nexora-client-1.0.6.jar`. Install Fabric Loader 0.16.10 (or newer)
+`build\libs\nexora-client-1.0.7.jar`. Install Fabric Loader 0.16.10 (or newer)
 for Minecraft 1.21.1, then place the JAR and Fabric API 0.116.6+1.21.1 in that
 Minecraft installation's `mods` folder.
 
@@ -27,7 +27,10 @@ the menu appears. Singleplayer, Multiplayer, and Settings open Minecraft's
 original screens; Client Settings opens Nexora's settings page, and Quit Game
 closes the client. The menu uses the transparent Nexora logo, compact centered
 button hit areas with animated hover underlines, and a three-dimensional player
-model with a walking entrance and correctly oriented, cursor-following head.
+model with a walking entrance, a slightly smaller head, and a correctly oriented
+cursor-following gaze. The account dropdown sits below the player without a
+skin portrait; account authentication remains controlled by the Minecraft
+launcher, so additional accounts must be added there.
 The preview uses the active Minecraft skin, including slim-arm models, or
 Steve as a fallback. Menu labels use the
 Onest Bold font from [combatant-client](https://github.com/Parcus123/combatant-client),

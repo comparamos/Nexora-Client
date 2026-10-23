@@ -97,8 +97,8 @@ public final class NexoraTitleScreen extends Screen {
         drawBackground(context);
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
-        drawAccount(context, mouseX, mouseY);
         renderCharacter(context, mouseX, mouseY, delta);
+        drawAccount(context, mouseX, mouseY);
         context.drawText(textRenderer, "Nexora Client " + MOD_VERSION, 22, height - 24, 0xFFBCA9FF, false);
         context.drawText(textRenderer, "PLAY BETTER. FASTER.", width - textRenderer.getWidth("PLAY BETTER. FASTER.") - 22,
                 height - 24, 0xFFBCA9FF, false);
@@ -196,37 +196,34 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int accountWidth() {
-        return Math.min(220, Math.max(150, width * 28 / 100));
+        return Math.min(250, Math.max(170, width * 24 / 100));
     }
 
     private int accountX() {
-        return width - accountWidth() - Math.max(12, width * 4 / 100);
+        return Math.round(width * 0.79f) - accountWidth() / 2;
+    }
+
+    private int accountY() {
+        return Math.min(height - 64, Math.round(height * 0.89f));
     }
 
     private void drawAccount(DrawContext context, int mouseX, int mouseY) {
         int x = accountX();
-        int y = Math.max(16, height / 8);
+        int y = accountY();
         int w = accountWidth();
-        drawAvatar(context, x + 8, y + 6, 26);
         String name = client == null ? "Player" : client.getSession().getUsername();
-        context.drawText(textRenderer, name, x + 44, y + 15, 0xFFF1EDFF, false);
-        context.drawText(textRenderer, accountDropdown ? "v" : ">", x + w - 23, y + 14, PURPLE, false);
+        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, y + 5, 0xFFF1EDFF);
+        context.drawCenteredTextWithShadow(textRenderer, accountDropdown ? "^" : "v",
+                x + w / 2, y + 19, PURPLE);
         if (!accountDropdown) {
             return;
         }
-        int dropdownY = y + 34;
-        context.fill(x, dropdownY, x + w, dropdownY + 66, 0xF0080B1D);
-        context.drawBorder(x, dropdownY, w, 66, 0xFF5D2BEA);
-        context.drawText(textRenderer, name, x + 14, dropdownY + 10, 0xFFF1EDFF, false);
-        context.drawText(textRenderer, "Accounts are managed by", x + 14, dropdownY + 30, 0xFFB7AFCB, false);
-        context.drawText(textRenderer, "your Minecraft launcher.", x + 14, dropdownY + 45, 0xFFB7AFCB, false);
-    }
-
-    private void drawAvatar(DrawContext context, int x, int y, int size) {
-        Identifier texture = skinTexture != null ? skinTexture
-                : DEFAULT_SKIN;
-        context.drawTexture(texture, x, y, size, size, 8, 8, 8, 8, 64, 64);
-        context.drawTexture(texture, x, y, size, size, 40, 8, 8, 8, 64, 64);
+        int dropdownY = y + 36;
+        context.fill(x, dropdownY, x + w, dropdownY + 54, 0xF0080B1D);
+        context.drawBorder(x, dropdownY, w, 54, 0xFF5D2BEA);
+        context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, dropdownY + 8, 0xFFF1EDFF);
+        context.drawCenteredTextWithShadow(textRenderer, "Add accounts in your launcher",
+                x + w / 2, dropdownY + 29, 0xFFB7AFCB);
     }
 
     private void renderCharacter(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -252,6 +249,9 @@ public final class NexoraTitleScreen extends Screen {
         lookPitch = MathHelper.lerp(lookSmoothing, lookPitch, targetLookPitch);
         characterModel.head.yaw = lookYaw;
         characterModel.head.pitch = lookPitch;
+        characterModel.head.xScale = 0.84f;
+        characterModel.head.yScale = 0.84f;
+        characterModel.head.zScale = 0.84f;
         characterModel.hat.copyTransform(characterModel.head);
         characterModel.body.yaw = idle;
         characterModel.rightArm.pitch = walk + 0.08f;
@@ -320,13 +320,13 @@ public final class NexoraTitleScreen extends Screen {
             }
         }
         int accountX = accountX();
-        int accountY = Math.max(16, height / 8);
+        int accountY = accountY();
         int accountWidth = accountWidth();
-        if (inside(mouseX, mouseY, accountX, accountY, accountWidth, 38)) {
+        if (inside(mouseX, mouseY, accountX, accountY, accountWidth, 34)) {
             accountDropdown = !accountDropdown;
             return true;
         }
-        if (accountDropdown && inside(mouseX, mouseY, accountX, accountY + 34, accountWidth, 66)) {
+        if (accountDropdown && inside(mouseX, mouseY, accountX, accountY + 36, accountWidth, 54)) {
             accountDropdown = false;
             return true;
         }
