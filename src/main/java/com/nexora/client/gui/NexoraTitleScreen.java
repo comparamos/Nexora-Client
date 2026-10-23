@@ -49,6 +49,8 @@ public final class NexoraTitleScreen extends Screen {
     private double dragStartX;
     private float dragStartRotation;
     private float rotation;
+    private float lookYaw;
+    private float lookPitch;
 
     public NexoraTitleScreen() {
         super(Text.literal("Nexora Client"));
@@ -94,7 +96,7 @@ public final class NexoraTitleScreen extends Screen {
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
         drawAccount(context, mouseX, mouseY);
-        renderCharacter(context, mouseX, mouseY);
+        renderCharacter(context, mouseX, mouseY, delta);
         context.drawText(textRenderer, "Nexora Client " + MOD_VERSION, 22, height - 24, 0xFFBCA9FF, false);
         context.drawText(textRenderer, "PLAY BETTER. FASTER.", width - textRenderer.getWidth("PLAY BETTER. FASTER.") - 22,
                 height - 24, 0xFFBCA9FF, false);
@@ -215,7 +217,7 @@ public final class NexoraTitleScreen extends Screen {
         context.drawTexture(texture, x, y, size, size, 40, 8, 8, 8, 64, 64);
     }
 
-    private void renderCharacter(DrawContext context, int mouseX, int mouseY) {
+    private void renderCharacter(DrawContext context, int mouseX, int mouseY, float delta) {
         if (client == null || skinTexture == null || characterModel == null) {
             return;
         }
@@ -224,12 +226,18 @@ public final class NexoraTitleScreen extends Screen {
         long elapsed = System.currentTimeMillis() - openedAt;
         float idle = (float) Math.sin(elapsed * 0.002) * 0.025f;
         float walk = (float) Math.sin(elapsed * 0.012) * 0.75f * (1 - entrance);
-        float scale = Math.min(height * 0.68f / 2, width * 0.20f);
+        float scale = Math.min(height * 0.76f / 2, width * 0.22f);
         float centerX = width * 0.79f + (1 - eased) * width * 0.25f;
-        float top = height * 0.18f + (float) Math.sin(elapsed * 0.002) * 2.0f;
+        float top = height * 0.11f + (float) Math.sin(elapsed * 0.002) * 2.0f;
         float headCenterY = top + scale * 0.25f;
-        float lookYaw = dragging ? 0 : MathHelper.clamp((mouseX - centerX) / Math.max(1, width) * 1.8f, -0.55f, 0.55f);
-        float lookPitch = dragging ? 0 : MathHelper.clamp((mouseY - headCenterY) / Math.max(1, height) * 1.5f, -0.4f, 0.4f);
+        float focalLength = Math.max(1, height * 0.52f);
+        float targetLookYaw = dragging ? 0
+                : MathHelper.clamp((float) Math.atan2(mouseX - centerX, focalLength), -1.1f, 1.1f);
+        float targetLookPitch = dragging ? 0
+                : MathHelper.clamp((float) -Math.atan2(mouseY - headCenterY, focalLength), -0.75f, 0.75f);
+        float lookSmoothing = MathHelper.clamp(delta * 0.2f, 0, 1);
+        lookYaw = MathHelper.lerp(lookSmoothing, lookYaw, targetLookYaw);
+        lookPitch = MathHelper.lerp(lookSmoothing, lookPitch, targetLookPitch);
         characterModel.head.yaw = lookYaw;
         characterModel.head.pitch = lookPitch;
         characterModel.hat.copyTransform(characterModel.head);
