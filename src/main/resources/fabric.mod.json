@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "nexora",
+  "version": "${version}",
+  "name": "Nexora Client",
+  "description": "A dark neon title screen for Minecraft Java Edition.",
+  "authors": ["comparamos"],
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.nexora.client.NexoraClient"
+    ]
+  },
+  "mixins": [
+    "nexora.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.16.10",
+    "minecraft": "1.21.1",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

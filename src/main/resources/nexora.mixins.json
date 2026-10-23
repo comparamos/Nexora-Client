@@ -1,0 +1,12 @@
+{
+  "required": true,
+  "package": "com.nexora.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "TitleScreenMixin",
+    "MinecraftClientMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
