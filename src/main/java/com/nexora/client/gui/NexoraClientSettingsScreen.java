@@ -2,7 +2,6 @@ package com.nexora.client.gui;
 
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
-import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 
@@ -14,14 +13,6 @@ public final class NexoraClientSettingsScreen extends Screen {
     public NexoraClientSettingsScreen(Screen parent) {
         super(Text.literal("Client Settings"));
         this.parent = parent;
-    }
-
-    @Override
-    protected void init() {
-        int buttonX = panelX() + panelWidth() - 86;
-        addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"), button -> close())
-                .dimensions(buttonX, panelY() + 14, 72, 20)
-                .build());
     }
 
     @Override
