@@ -13,7 +13,6 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
 
 public final class NexoraTitleScreen extends Screen {
-    private static final int PURPLE = 0xFF9B38FF;
     private static final Identifier NEXORA_LOGO = Identifier.of("nexora", "textures/gui/nexora_logo.png");
     private static final Identifier MENU_FONT = Identifier.of("nexora", "menu");
     private static final int MENU_ITEM_COUNT = 5;
@@ -51,38 +50,34 @@ public final class NexoraTitleScreen extends Screen {
         drawBackground(context);
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
+        NexoraTheme.Palette palette = NexoraTheme.current();
         context.drawText(textRenderer,
                 menuText("Nexora Client " + MOD_VERSION + " [" + GAME_VERSION + "]"),
-                2, height - 8, 0xFFBCA9FF, false);
+                2, height - 8, palette.accentSoft(), false);
     }
 
     private void drawBackground(DrawContext context) {
-        context.fillGradient(0, 0, width, height, 0xFF03040B, 0xFF08051C);
-        long time = animateEntrance ? System.currentTimeMillis() - openedAt : 0;
-        for (int i = 0; i < 24; i++) {
-            float phase = (time * (0.012f + (i % 5) * 0.002f) + i * 67.0f) % (height + 24);
-            int x = Math.floorMod(i * 193 + (int) (Math.sin(time * 0.00035 + i) * 48), Math.max(1, width));
-            int y = height - (int) phase;
-            int color = i % 4 == 0 ? 0x77723BFF : 0x445149FF;
-            int size = i % 9 == 0 ? 2 : 1;
-            context.fill(x, y, x + size, y + size, color);
-        }
+        NexoraTheme.Palette palette = NexoraTheme.current();
+        context.fillGradient(0, 0, width, height, palette.backgroundTop(), palette.backgroundBottom());
     }
 
     private void drawBrand(DrawContext context) {
-        float progress = entranceProgress(850);
+        float progress = entranceProgress(650);
         float eased = smoothEase(progress);
-        int center = menuCenterX() + Math.round((float) Math.sin(Math.PI * progress)
-                * Math.min(width * 0.045f, 48));
+        int verticalOffset = Math.round((1 - eased) * 9);
+        int center = menuCenterX();
         int logoSize = logoSize();
         int logoWidth = logoSize * 631 / 568;
-        int logoY = Math.round(MathHelper.lerp(eased, height * 0.29f, logoY()));
+        int logoY = logoY() + verticalOffset;
+        context.setShaderColor(1.0F, 1.0F, 1.0F, eased);
         context.drawTexture(NEXORA_LOGO, center - logoWidth / 2, logoY, logoWidth, logoSize,
                 0, 0, 1262, 1136, 1262, 1136);
+        context.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+        NexoraTheme.Palette palette = NexoraTheme.current();
         context.drawCenteredTextWithShadow(textRenderer, menuText("Nexora"), center, logoY + logoSize + 8,
-                0xFFF4F1FF);
+                withAlpha(palette.text(), Math.round(eased * 255)));
         context.drawCenteredTextWithShadow(textRenderer, menuText("C L I E N T"), center, logoY + logoSize + 25,
-                PURPLE);
+                withAlpha(palette.accent(), Math.round(eased * 255)));
     }
 
     private void drawMenu(DrawContext context, int mouseX, int mouseY, float delta) {
@@ -91,23 +86,24 @@ public final class NexoraTitleScreen extends Screen {
         int x = menuCenterX() - buttonWidth / 2;
         int firstY = firstButtonY();
         int gap = buttonGap();
+        float reveal = smoothEase(entranceProgress(650));
+        int verticalOffset = Math.round((1 - reveal) * 7);
         for (int i = 0; i < MENU_LABELS.length; i++) {
             int y = firstY + i * (buttonHeight + gap);
             boolean isHovered = inside(mouseX, mouseY, x, y, buttonWidth, buttonHeight);
             hover[i] = MathHelper.clamp(hover[i] + (isHovered ? 1 : -1) * delta * 0.12f, 0, 1);
             Text label = menuText(MENU_LABELS[i]);
-            float reveal = entranceProgress(300 + i * 70, 420);
-            float easedReveal = smoothEase(reveal);
-            int textColor = mixColor(easedReveal, 0x00F2EEFF,
-                    mixColor(hover[i], 0xFFF2EEFF, 0xFFFFFFFF));
+            NexoraTheme.Palette palette = NexoraTheme.current();
+            int textColor = mixColor(reveal, withAlpha(palette.text(), 0),
+                    mixColor(hover[i], palette.text(), 0xFFFFFFFF));
             context.drawCenteredTextWithShadow(textRenderer, label, menuCenterX(),
-                    y + (buttonHeight - 8) / 2 - 3 + Math.round((1 - easedReveal) * 5), textColor);
-            int underlineWidth = Math.round((textRenderer.getWidth(label) + 16) * hover[i] * easedReveal);
+                    y + (buttonHeight - 8) / 2 - 3 + verticalOffset, textColor);
+            int underlineWidth = Math.round((textRenderer.getWidth(label) + 16) * hover[i] * reveal);
             if (underlineWidth > 0) {
                 int underlineX = menuCenterX() - underlineWidth / 2;
                 int underlineY = y + buttonHeight - 2;
                 context.fill(underlineX, underlineY, underlineX + underlineWidth, underlineY + 1,
-                        mixColor(hover[i], 0x009B38FF, 0xFFBCA9FF));
+                        mixColor(hover[i], withAlpha(palette.accentSoft(), 0), palette.accentSoft()));
             }
         }
     }
@@ -174,6 +170,10 @@ public final class NexoraTitleScreen extends Screen {
         return alpha << 24 | red << 16 | green << 8 | blue;
     }
 
+    private static int withAlpha(int color, int alpha) {
+        return color & 0x00FFFFFF | MathHelper.clamp(alpha, 0, 255) << 24;
+    }
+
     private static boolean inside(double mouseX, double mouseY, int x, int y, int width, int height) {
         return mouseX >= x && mouseX < x + width && mouseY >= y && mouseY < y + height;
     }
@@ -183,7 +183,7 @@ public final class NexoraTitleScreen extends Screen {
         if (button != 0) {
             return super.mouseClicked(mouseX, mouseY, button);
         }
-        if (animateEntrance && entranceProgress(850) < 1) {
+        if (animateEntrance && entranceProgress(650) < 1) {
             return true;
         }
         int buttonWidth = buttonWidth();
