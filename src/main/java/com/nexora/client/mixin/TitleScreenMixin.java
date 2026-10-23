@@ -1,5 +1,6 @@
 package com.nexora.client.mixin;
 
+import com.nexora.client.gui.NexoraIntroScreen;
 import com.nexora.client.gui.NexoraTitleScreen;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.screen.TitleScreen;
@@ -13,9 +14,10 @@ public abstract class TitleScreenMixin {
     @Inject(method = "init", at = @At("HEAD"), cancellable = true)
     private void nexora$replaceTitleScreen(CallbackInfo callback) {
         MinecraftClient client = MinecraftClient.getInstance();
-        if (!(client.currentScreen instanceof NexoraTitleScreen)) {
+        if (!(client.currentScreen instanceof NexoraIntroScreen)
+                && !(client.currentScreen instanceof NexoraTitleScreen)) {
             callback.cancel();
-            client.setScreen(new NexoraTitleScreen());
+            client.setScreen(new NexoraIntroScreen());
         }
     }
 }

@@ -32,8 +32,10 @@ public final class NexoraTitleScreen extends Screen {
     private static final Identifier NEXORA_LOGO = Identifier.of("nexora", "textures/gui/nexora_logo.png");
     private static final Identifier MENU_FONT = Identifier.of("nexora", "menu");
     private static final Identifier DEFAULT_SKIN = Identifier.ofVanilla("textures/entity/player/wide/steve.png");
-    private static final int MENU_ITEM_COUNT = 4;
-    private static final String[] MENU_LABELS = {"Singleplayer", "Multiplayer", "Settings", "Quit Game"};
+    private static final int MENU_ITEM_COUNT = 5;
+    private static final String[] MENU_LABELS = {
+            "Singleplayer", "Multiplayer", "Settings", "Client Settings", "Quit Game"
+    };
     private static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("nexora")
             .orElseThrow(() -> new IllegalStateException("Nexora mod metadata is unavailable"))
             .getMetadata().getVersion().getFriendlyString();
@@ -116,10 +118,13 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private void drawBrand(DrawContext context) {
-        int center = menuCenterX();
+        float progress = MathHelper.clamp((System.currentTimeMillis() - openedAt) / 1100.0f, 0, 1);
+        float eased = 1 - (float) Math.pow(1 - progress, 3);
+        int center = menuCenterX() + Math.round((float) Math.sin(Math.PI * progress)
+                * Math.min(width * 0.14f, 150));
         int logoSize = logoSize();
         int logoWidth = logoSize * 631 / 568;
-        int logoY = logoY();
+        int logoY = Math.round(MathHelper.lerp(eased, height * 0.38f, logoY()));
         context.drawTexture(NEXORA_LOGO, center - logoWidth / 2, logoY, logoWidth, logoSize,
                 0, 0, 631, 568, 631, 568);
         context.drawCenteredTextWithShadow(textRenderer, menuText("Nexora"), center, logoY + logoSize + 8,
@@ -129,6 +134,9 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private void drawMenu(DrawContext context, int mouseX, int mouseY, float delta) {
+        if (System.currentTimeMillis() - openedAt < 750) {
+            return;
+        }
         int buttonWidth = buttonWidth();
         int buttonHeight = buttonHeight();
         int x = menuCenterX() - buttonWidth / 2;
@@ -157,11 +165,15 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int buttonHeight() {
-        return Math.min(48, Math.max(19, height / 16));
+        return Math.min(30, Math.max(22, height / 28));
     }
 
     private int buttonWidth() {
-        return Math.min(420, Math.max(120, width * 34 / 100));
+        int widestLabel = 0;
+        for (String label : MENU_LABELS) {
+            widestLabel = Math.max(widestLabel, textRenderer.getWidth(menuText(label)));
+        }
+        return Math.min(width / 2, widestLabel + 28);
     }
 
     private int buttonGap() {
@@ -226,15 +238,15 @@ public final class NexoraTitleScreen extends Screen {
         long elapsed = System.currentTimeMillis() - openedAt;
         float idle = (float) Math.sin(elapsed * 0.002) * 0.025f;
         float walk = (float) Math.sin(elapsed * 0.012) * 0.75f * (1 - entrance);
-        float scale = Math.min(height * 0.76f / 2, width * 0.22f);
+        float scale = Math.min(height * 0.48f / 2, width * 0.14f);
         float centerX = width * 0.79f + (1 - eased) * width * 0.25f;
         float top = height * 0.11f + (float) Math.sin(elapsed * 0.002) * 2.0f;
         float headCenterY = top + scale * 0.25f;
         float focalLength = Math.max(1, height * 0.52f);
         float targetLookYaw = dragging ? 0
-                : MathHelper.clamp((float) Math.atan2(mouseX - centerX, focalLength), -1.1f, 1.1f);
+                : MathHelper.clamp((float) Math.atan2(centerX - mouseX, focalLength), -1.1f, 1.1f);
         float targetLookPitch = dragging ? 0
-                : MathHelper.clamp((float) -Math.atan2(mouseY - headCenterY, focalLength), -0.75f, 0.75f);
+                : MathHelper.clamp((float) Math.atan2(mouseY - headCenterY, focalLength), -0.75f, 0.75f);
         float lookSmoothing = MathHelper.clamp(delta * 0.2f, 0, 1);
         lookYaw = MathHelper.lerp(lookSmoothing, lookYaw, targetLookYaw);
         lookPitch = MathHelper.lerp(lookSmoothing, lookPitch, targetLookPitch);
@@ -300,7 +312,8 @@ public final class NexoraTitleScreen extends Screen {
                         case 0 -> client.setScreen(new SelectWorldScreen(this));
                         case 1 -> client.setScreen(new MultiplayerScreen(this));
                         case 2 -> client.setScreen(new OptionsScreen(this, client.options));
-                        case 3 -> client.scheduleStop();
+                        case 3 -> client.setScreen(new NexoraClientSettingsScreen(this));
+                        case 4 -> client.scheduleStop();
                     }
                 }
                 return true;
