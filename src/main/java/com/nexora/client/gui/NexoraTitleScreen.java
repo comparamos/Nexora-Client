@@ -1,37 +1,20 @@
 package com.nexora.client.gui;
 
 import net.fabricmc.loader.api.FabricLoader;
-import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
 import net.minecraft.client.gui.screen.option.OptionsScreen;
 import net.minecraft.client.gui.screen.world.SelectWorldScreen;
-import net.minecraft.client.model.ModelPart;
-import net.minecraft.client.render.DiffuseLighting;
-import net.minecraft.client.render.LightmapTextureManager;
-import net.minecraft.client.render.OverlayTexture;
-import net.minecraft.client.render.RenderLayer;
-import net.minecraft.client.render.VertexConsumer;
-import net.minecraft.client.render.entity.model.EntityModelLayers;
-import net.minecraft.client.render.entity.model.PlayerEntityModel;
-import net.minecraft.client.texture.PlayerSkinProvider;
-import net.minecraft.client.util.SkinTextures;
-import net.minecraft.client.util.math.MatrixStack;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.text.Style;
 import net.minecraft.text.Text;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RotationAxis;
-
-import java.util.concurrent.CompletableFuture;
 
 public final class NexoraTitleScreen extends Screen {
     private static final int PURPLE = 0xFF9B38FF;
     private static final Identifier NEXORA_LOGO = Identifier.of("nexora", "textures/gui/nexora_logo.png");
     private static final Identifier MENU_FONT = Identifier.of("nexora", "menu");
-    private static final Identifier DEFAULT_SKIN = Identifier.ofVanilla("textures/entity/player/wide/steve.png");
     private static final int MENU_ITEM_COUNT = 5;
     private static final String[] MENU_LABELS = {
             "Singleplayer", "Multiplayer", "Settings", "Client Settings", "Quit Game"
@@ -42,54 +25,10 @@ public final class NexoraTitleScreen extends Screen {
 
     private final long openedAt = System.currentTimeMillis();
     private final float[] hover = new float[MENU_ITEM_COUNT];
-    private Identifier skinTexture;
-    private PlayerEntityModel<LivingEntity> characterModel;
-    private boolean skinRequested;
-    private boolean slimSkin;
     private boolean accountDropdown;
-    private boolean dragging;
-    private double dragStartX;
-    private float dragStartRotation;
-    private float rotation;
-    private float lookYaw;
-    private float lookPitch;
 
     public NexoraTitleScreen() {
         super(Text.literal("Nexora Client"));
-    }
-
-    @Override
-    protected void init() {
-        super.init();
-        updateCharacterModel();
-        requestSkin();
-    }
-
-    private void requestSkin() {
-        if (skinRequested || client == null) {
-            return;
-        }
-        skinRequested = true;
-        skinTexture = DEFAULT_SKIN;
-        PlayerSkinProvider provider = client.getSkinProvider();
-        CompletableFuture<SkinTextures> lookup = provider.fetchSkinTextures(client.getGameProfile());
-        lookup.thenAccept(textures -> client.execute(() -> updateSkin(textures)));
-    }
-
-    private void updateSkin(SkinTextures textures) {
-        skinTexture = textures.texture();
-        slimSkin = textures.model() == SkinTextures.Model.SLIM;
-        updateCharacterModel();
-    }
-
-    private void updateCharacterModel() {
-        if (client == null) {
-            return;
-        }
-        ModelPart modelPart = client.getEntityModelLoader().getModelPart(
-                slimSkin ? EntityModelLayers.PLAYER_SLIM : EntityModelLayers.PLAYER);
-        characterModel = new PlayerEntityModel<>(modelPart, slimSkin);
-        characterModel.setVisible(true);
     }
 
     @Override
@@ -97,7 +36,6 @@ public final class NexoraTitleScreen extends Screen {
         drawBackground(context);
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
-        renderCharacter(context, mouseX, mouseY, delta);
         drawAccount(context, mouseX, mouseY);
         context.drawText(textRenderer, "NEXORA CLIENT  /  " + MOD_VERSION,
                 22, height - 24, 0xFFBCA9FF, false);
@@ -162,11 +100,7 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int menuCenterX() {
-        return width * 39 / 100;
-    }
-
-    private int playerCenterX() {
-        return width * 71 / 100;
+        return width / 2;
     }
 
     private int buttonHeight() {
@@ -205,11 +139,11 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int accountX() {
-        return playerCenterX() - accountWidth() / 2;
+        return width - accountWidth() - Math.max(18, width / 20);
     }
 
     private int accountY() {
-        return Math.round(height * 0.13f);
+        return Math.max(18, height / 10);
     }
 
     private void drawAccount(DrawContext context, int mouseX, int mouseY) {
@@ -231,66 +165,6 @@ public final class NexoraTitleScreen extends Screen {
         context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, dropdownY + 6, 0xFFF1EDFF);
         context.drawCenteredTextWithShadow(textRenderer, "Add accounts in your launcher",
                 x + w / 2, dropdownY + 23, 0xFFB7AFCB);
-    }
-
-    private void renderCharacter(DrawContext context, int mouseX, int mouseY, float delta) {
-        if (client == null || skinTexture == null || characterModel == null) {
-            return;
-        }
-        float entrance = MathHelper.clamp((System.currentTimeMillis() - openedAt) / 900.0f, 0, 1);
-        float eased = 1 - (float) Math.pow(1 - entrance, 3);
-        long elapsed = System.currentTimeMillis() - openedAt;
-        float idle = (float) Math.sin(elapsed * 0.002) * 0.025f;
-        float walk = (float) Math.sin(elapsed * 0.012) * 0.75f * (1 - entrance);
-        float scale = Math.min(height * 0.62f / 2, width * 0.19f);
-        float centerX = playerCenterX() + (1 - eased) * width * 0.25f;
-        float top = height * 0.23f + (float) Math.sin(elapsed * 0.002) * 2.0f;
-        float headCenterY = top + scale * 0.25f;
-        float focalLength = Math.max(1, height * 0.52f);
-        float targetLookYaw = dragging ? 0
-                : MathHelper.clamp((float) Math.atan2(mouseX - centerX, focalLength), -1.1f, 1.1f);
-        float targetLookPitch = dragging ? 0
-                : MathHelper.clamp((float) Math.atan2(mouseY - headCenterY, focalLength), -0.75f, 0.75f);
-        float lookSmoothing = MathHelper.clamp(delta * 0.2f, 0, 1);
-        lookYaw = MathHelper.lerp(lookSmoothing, lookYaw, targetLookYaw);
-        lookPitch = MathHelper.lerp(lookSmoothing, lookPitch, targetLookPitch);
-        characterModel.head.yaw = lookYaw;
-        characterModel.head.pitch = lookPitch;
-        characterModel.head.xScale = 0.84f;
-        characterModel.head.yScale = 0.84f;
-        characterModel.head.zScale = 0.84f;
-        characterModel.hat.copyTransform(characterModel.head);
-        characterModel.body.yaw = idle;
-        characterModel.rightArm.pitch = walk + 0.08f;
-        characterModel.leftArm.pitch = -walk + 0.08f;
-        characterModel.rightLeg.pitch = -walk;
-        characterModel.leftLeg.pitch = walk;
-        characterModel.jacket.copyTransform(characterModel.body);
-        characterModel.rightSleeve.copyTransform(characterModel.rightArm);
-        characterModel.leftSleeve.copyTransform(characterModel.leftArm);
-        characterModel.rightPants.copyTransform(characterModel.rightLeg);
-        characterModel.leftPants.copyTransform(characterModel.leftLeg);
-
-        MatrixStack matrices = context.getMatrices();
-        DiffuseLighting.enableGuiDepthLighting();
-        try {
-            context.draw(() -> {
-                matrices.push();
-                try {
-                    matrices.translate(centerX, top + scale * 0.5f, 150);
-                    matrices.scale(scale, scale, scale);
-                    matrices.multiply(RotationAxis.POSITIVE_Y.rotationDegrees(rotation + 180));
-                    VertexConsumer vertexConsumer = context.getVertexConsumers()
-                            .getBuffer(RenderLayer.getEntityCutoutNoCull(skinTexture));
-                    characterModel.render(matrices, vertexConsumer, LightmapTextureManager.MAX_LIGHT_COORDINATE,
-                            OverlayTexture.DEFAULT_UV, 0xFFFFFFFF);
-                } finally {
-                    matrices.pop();
-                }
-            });
-        } finally {
-            DiffuseLighting.disableGuiDepthLighting();
-        }
     }
 
     private static Text menuText(String value) {
@@ -349,28 +223,7 @@ public final class NexoraTitleScreen extends Screen {
         if (accountDropdown) {
             accountDropdown = false;
         }
-        if (mouseX > width * 0.68 && mouseY > height * 0.3 && mouseY < height * 0.95) {
-            dragging = true;
-            dragStartX = mouseX;
-            dragStartRotation = rotation;
-            return true;
-        }
         return super.mouseClicked(mouseX, mouseY, button);
-    }
-
-    @Override
-    public boolean mouseDragged(double mouseX, double mouseY, int button, double deltaX, double deltaY) {
-        if (dragging) {
-            rotation = dragStartRotation + (float) ((mouseX - dragStartX) * 0.7);
-            return true;
-        }
-        return super.mouseDragged(mouseX, mouseY, button, deltaX, deltaY);
-    }
-
-    @Override
-    public boolean mouseReleased(double mouseX, double mouseY, int button) {
-        dragging = false;
-        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     @Override

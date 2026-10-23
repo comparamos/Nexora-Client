@@ -15,7 +15,7 @@ From the repository root, run:
 ```
 
 The distributable mod is created at
-`build\libs\nexora-client-1.1.0.jar`. Install Fabric Loader 0.16.10 (or newer)
+`build\libs\nexora-client-1.1.1.jar`. Install Fabric Loader 0.16.10 (or newer)
 for Minecraft 1.21.1, then place the JAR and Fabric API 0.116.6+1.21.1 in that
 Minecraft installation's `mods` folder.
 
@@ -25,19 +25,19 @@ The startup screen shows the Nexora logo and a "Press to Enter" prompt. Enter
 or click to open the main menu; the logo follows an upward curved animation as
 the menu appears. Singleplayer, Multiplayer, and Settings open Minecraft's
 original screens; Client Settings opens Nexora's settings page, and Quit Game
-closes the client. The menu uses a minimal dark layout with a transparent Nexora logo, simple
-text-first buttons with subtle animated hover underlines, and a three-dimensional
-player preview. The account selector sits above the player without a skin
-portrait, and its dropdown opens downward. Account authentication remains
-controlled by the Minecraft launcher, so additional accounts must be added
-there.
+closes the client. The menu uses a minimal dark layout with a centered transparent Nexora logo
+and centered text-first buttons with subtle animated hover underlines. It has
+no character preview. The account selector sits in the upper-right corner
+without a skin portrait, and its dropdown opens downward. Account
+authentication remains controlled by the Minecraft launcher, so additional
+accounts must be added there.
 The preview uses the active Minecraft skin, including slim-arm models, or
 Steve as a fallback. Menu labels use the
 Onest Bold font from [combatant-client](https://github.com/Parcus123/combatant-client),
 under the SIL Open Font License 1.1; its license is included with the font
 asset.
 
-The account panel displays the currently authenticated Minecraft session and
-its available skin. Authentication and account selection remain with the
-launcher: the mod does not invent accounts, change usernames to impersonate a
-login, or save credentials.
+The account selector displays the currently authenticated Minecraft username.
+Authentication and account selection remain with the launcher: the mod does
+not invent accounts, change usernames to impersonate a login, or save
+credentials.
