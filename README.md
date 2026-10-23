@@ -15,7 +15,7 @@ From the repository root, run:
 ```
 
 The distributable mod is created at
-`build\libs\nexora-client-1.0.7.jar`. Install Fabric Loader 0.16.10 (or newer)
+`build\libs\nexora-client-1.0.8.jar`. Install Fabric Loader 0.16.10 (or newer)
 for Minecraft 1.21.1, then place the JAR and Fabric API 0.116.6+1.21.1 in that
 Minecraft installation's `mods` folder.
 

@@ -218,7 +218,7 @@ public final class NexoraTitleScreen extends Screen {
         if (!accountDropdown) {
             return;
         }
-        int dropdownY = y + 36;
+        int dropdownY = y - 58;
         context.fill(x, dropdownY, x + w, dropdownY + 54, 0xF0080B1D);
         context.drawBorder(x, dropdownY, w, 54, 0xFF5D2BEA);
         context.drawCenteredTextWithShadow(textRenderer, name, x + w / 2, dropdownY + 8, 0xFFF1EDFF);
@@ -326,7 +326,7 @@ public final class NexoraTitleScreen extends Screen {
             accountDropdown = !accountDropdown;
             return true;
         }
-        if (accountDropdown && inside(mouseX, mouseY, accountX, accountY + 36, accountWidth, 54)) {
+        if (accountDropdown && inside(mouseX, mouseY, accountX, accountY - 58, accountWidth, 54)) {
             accountDropdown = false;
             return true;
         }
