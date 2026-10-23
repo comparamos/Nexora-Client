@@ -238,13 +238,13 @@ public final class NexoraTitleScreen extends Screen {
         long elapsed = System.currentTimeMillis() - openedAt;
         float idle = (float) Math.sin(elapsed * 0.002) * 0.025f;
         float walk = (float) Math.sin(elapsed * 0.012) * 0.75f * (1 - entrance);
-        float scale = Math.min(height * 0.48f / 2, width * 0.14f);
+        float scale = Math.min(height * 0.76f / 2, width * 0.22f);
         float centerX = width * 0.79f + (1 - eased) * width * 0.25f;
         float top = height * 0.11f + (float) Math.sin(elapsed * 0.002) * 2.0f;
         float headCenterY = top + scale * 0.25f;
         float focalLength = Math.max(1, height * 0.52f);
         float targetLookYaw = dragging ? 0
-                : MathHelper.clamp((float) Math.atan2(centerX - mouseX, focalLength), -1.1f, 1.1f);
+                : MathHelper.clamp((float) Math.atan2(mouseX - centerX, focalLength), -1.1f, 1.1f);
         float targetLookPitch = dragging ? 0
                 : MathHelper.clamp((float) Math.atan2(mouseY - headCenterY, focalLength), -0.75f, 0.75f);
         float lookSmoothing = MathHelper.clamp(delta * 0.2f, 0, 1);
