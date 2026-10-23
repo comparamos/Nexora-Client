@@ -1,6 +1,7 @@
 package com.nexora.client.gui;
 
 import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.client.gui.screen.multiplayer.MultiplayerScreen;
@@ -22,6 +23,7 @@ public final class NexoraTitleScreen extends Screen {
     private static final String MOD_VERSION = FabricLoader.getInstance().getModContainer("nexora")
             .orElseThrow(() -> new IllegalStateException("Nexora mod metadata is unavailable"))
             .getMetadata().getVersion().getFriendlyString();
+    private static final String GAME_VERSION = SharedConstants.getGameVersion().getName();
 
     private final long openedAt = System.currentTimeMillis();
     private final float[] hover = new float[MENU_ITEM_COUNT];
@@ -32,13 +34,22 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     @Override
+    protected void init() {
+        super.init();
+        if (client != null) {
+            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, false);
+        }
+    }
+
+    @Override
     public void render(DrawContext context, int mouseX, int mouseY, float delta) {
         drawBackground(context);
         drawBrand(context);
         drawMenu(context, mouseX, mouseY, delta);
         drawAccount(context, mouseX, mouseY);
-        context.drawText(textRenderer, "NEXORA CLIENT  /  " + MOD_VERSION,
-                22, height - 24, 0xFFBCA9FF, false);
+        context.drawText(textRenderer,
+                menuText("Nexora Client " + MOD_VERSION + "  |  Minecraft " + GAME_VERSION),
+                4, height - 14, 0xFFBCA9FF, false);
         context.drawText(textRenderer, "PLAY BETTER. FASTER.", width - textRenderer.getWidth("PLAY BETTER. FASTER.") - 22,
                 height - 24, 0xFFBCA9FF, false);
     }
@@ -120,7 +131,7 @@ public final class NexoraTitleScreen extends Screen {
     }
 
     private int logoSize() {
-        return Math.min(76, Math.max(32, height / 9));
+        return Math.min(140, Math.max(80, height / 8));
     }
 
     private int logoY() {

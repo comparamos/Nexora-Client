@@ -1,5 +1,7 @@
 package com.nexora.client.gui;
 
+import net.fabricmc.loader.api.FabricLoader;
+import net.minecraft.SharedConstants;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.text.Style;
@@ -11,10 +13,21 @@ public final class NexoraIntroScreen extends Screen {
     private static final int PURPLE = 0xFF9B38FF;
     private static final Identifier NEXORA_LOGO = Identifier.of("nexora", "textures/gui/nexora_logo.png");
     private static final Identifier MENU_FONT = Identifier.of("nexora", "menu");
+    private static final String CLIENT_VERSION = FabricLoader.getInstance().getModContainer("nexora")
+            .orElseThrow(() -> new IllegalStateException("Nexora mod metadata is unavailable"))
+            .getMetadata().getVersion().getFriendlyString();
     private final long openedAt = System.currentTimeMillis();
 
     public NexoraIntroScreen() {
         super(Text.literal("Nexora Client"));
+    }
+
+    @Override
+    protected void init() {
+        super.init();
+        if (client != null) {
+            client.getTextureManager().getTexture(NEXORA_LOGO).setFilter(true, false);
+        }
     }
 
     @Override
@@ -23,7 +36,7 @@ public final class NexoraIntroScreen extends Screen {
         drawParticles(context);
 
         long elapsed = System.currentTimeMillis() - openedAt;
-        int logoSize = Math.min(112, Math.max(48, height / 5));
+        int logoSize = Math.min(170, Math.max(110, height / 5));
         int logoWidth = logoSize * 631 / 568;
         int groupHeight = logoSize + 54;
         int logoY = height / 2 - groupHeight / 2 + (int) (Math.sin(elapsed * 0.0018) * 4);
@@ -38,6 +51,9 @@ public final class NexoraIntroScreen extends Screen {
         int promptColor = (elapsed / 650) % 2 == 0 ? 0xFFF4F1FF : 0xFFBCA9FF;
         context.drawCenteredTextWithShadow(textRenderer, menuText("Press to Enter"), centerX, height * 2 / 3,
                 promptColor);
+        String versionText = "Nexora Client " + CLIENT_VERSION + "  |  Minecraft "
+                + SharedConstants.getGameVersion().getName();
+        context.drawText(textRenderer, menuText(versionText), 4, height - 14, 0xFFBCA9FF, false);
     }
 
     private void drawParticles(DrawContext context) {
